@@ -1,0 +1,369 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Celica Glow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600&family=Archivo+Narrow:wght@400;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: single column instrument panel; monochrome, color only where it is the setting itself */
+:root{
+  --bg:#000; --fg:#f5f5f5; --muted:#8a8a8a; --line:#242424; --line-strong:#3a3a3a; --raise:#0e0e0e;
+  --glow:hsl(0 100% 50%);
+  --display:"Archivo Narrow","Arial Narrow",system-ui,sans-serif;
+  --body:"Archivo",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);-webkit-font-smoothing:antialiased}
+body{padding-block:calc(env(safe-area-inset-top,0px) + 18px) calc(env(safe-area-inset-bottom,0px) + 32px);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+main{max-width:460px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+header{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+h1{font-family:var(--display);font-weight:700;font-size:34px;line-height:.9;letter-spacing:.06em;margin:0;text-transform:uppercase}
+h1 span{font-weight:400;color:var(--muted)}
+.status{white-space:nowrap;font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:8px}
+.dot{width:8px;height:8px;border-radius:50%;border:1px solid var(--muted)}
+.dot.on{background:var(--fg);border-color:var(--fg)}
+.glow{height:3px;border-radius:2px;background:var(--glow);box-shadow:0 0 18px 2px var(--glow);opacity:.9;transition:background .2s,box-shadow .2s,opacity .2s}
+section{border-top:1px solid var(--line);padding-top:16px;display:flex;flex-direction:column;gap:12px}
+h2{font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin:0;font-weight:500}
+button{font:inherit;font-size:14px;letter-spacing:.02em;color:var(--fg);background:transparent;border:1px solid var(--line-strong);border-radius:4px;padding:12px 10px;cursor:pointer;transition:background .15s,color .15s,border-color .15s}
+button:hover{border-color:var(--fg)}
+button:active{transform:scale(.98)}
+button:focus-visible,input:focus-visible{outline:1px solid var(--fg);outline-offset:3px}
+button.primary{background:var(--fg);color:var(--bg);border-color:var(--fg);font-weight:600;letter-spacing:.12em;text-transform:uppercase;font-size:13px;padding:15px}
+button.sel{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.row{display:grid;grid-template-columns:repeat(auto-fit,minmax(84px,1fr));gap:8px}
+.row4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.row5{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.row5 button{padding:12px 0}
+.row3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.slider-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.big{font-family:var(--mono);font-size:30px;font-weight:500;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.val{font-family:var(--mono);font-size:12px;color:var(--fg);font-variant-numeric:tabular-nums}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:32px;background:transparent;margin:0}
+input[type=range]::-webkit-slider-runnable-track{height:2px;background:var(--line-strong);border-radius:1px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;margin-top:-10px;border-radius:50%;background:var(--fg);border:0}
+input[type=range]::-moz-range-track{height:2px;background:var(--line-strong)}
+input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:var(--fg);border:0}
+#hue::-webkit-slider-runnable-track{height:6px;background:linear-gradient(90deg,#f00,#ff0,#0f0,#0ff,#00f,#f0f,#f00);border-radius:3px}
+#hue::-webkit-slider-thumb{margin-top:-8px;border:3px solid var(--bg)}
+#hue::-moz-range-track{height:6px;background:linear-gradient(90deg,#f00,#ff0,#0f0,#0ff,#00f,#f0f,#f00)}
+.swatches{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
+.sw{aspect-ratio:1;border-radius:50%;padding:0;max-width:100%;border:1px solid var(--line-strong)}
+.sw.sel{outline:1px solid var(--fg);outline-offset:3px}
+.power{display:grid;grid-template-columns:1fr 64px 64px;gap:8px;align-items:center}
+.power span{font-size:14px}
+.power button{padding:9px 0}
+.note{font-size:12.5px;color:var(--muted);line-height:1.55;margin:0}
+.warn{border:1px solid var(--fg);border-radius:4px;padding:12px;font-size:14px;line-height:1.5}
+details summary{cursor:pointer;color:var(--muted);font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase}
+#log{font-family:var(--mono);font-size:10.5px;color:var(--muted);max-height:180px;overflow:auto;white-space:pre-wrap;word-break:break-all;margin:10px 0 0}
+.stack{display:flex;flex-direction:column;gap:18px}
+.check{display:flex;align-items:center;gap:10px;font-size:14px}
+.check input{-webkit-appearance:none;appearance:none;width:20px;height:20px;border:1px solid var(--line-strong);border-radius:3px;margin:0;flex:none;display:grid;place-content:center}
+.check input:checked{background:var(--fg);border-color:var(--fg)}
+.check input:checked::after{content:"";width:9px;height:5px;border-left:2px solid var(--bg);border-bottom:2px solid var(--bg);transform:rotate(-45deg) translate(1px,-1px)}
+button.busy{opacity:.5}
+.disabled{opacity:.35;pointer-events:none}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}button:active{transform:none}}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Celica <span>Glow</span></h1>
+    <div class="status"><i class="dot" id="dot"></i><span id="status">Not connected</span></div>
+  </header>
+  <div class="glow" id="glow" aria-hidden="true"></div>
+
+  <div class="warn" id="nobt" hidden>This browser can't use Bluetooth. On iPhone, open this file in the free <b>Bluefy</b> browser. On Android or a computer, use Chrome.</div>
+
+  <button class="primary" id="connect">Connect to lights</button>
+
+  <div id="controls" class="disabled">
+    <div class="stack">
+      <section>
+        <h2>Presets</h2>
+        <div class="row4">
+          <button data-preset="night">Night</button>
+          <button data-preset="dim">Dim</button>
+          <button data-preset="show">Show</button>
+          <button data-preset="off">Off</button>
+        </div>
+        <p class="note">Night is red at 3%, Dim is red at 10%, Show is red at 100%.</p>
+      </section>
+
+      <section>
+        <h2>Zone</h2>
+        <div class="row3" id="zones">
+          <button data-zone="0" class="sel">All</button>
+          <button data-zone="1">Zone 1</button>
+          <button data-zone="2">Zone 2</button>
+        </div>
+        <p class="note">Brightness and color go to the zone you pick here.</p>
+      </section>
+
+      <section>
+        <h2>Brightness</h2>
+        <div class="slider-head"><span class="note">The stock app stops at 10%</span><span class="big" id="bval">10%</span></div>
+        <input type="range" id="bright" min="1" max="100" step="1" value="10" aria-label="Brightness">
+        <div class="row5">
+          <button data-b="1">1%</button><button data-b="3">3%</button><button data-b="5">5%</button><button data-b="10">10%</button><button data-b="50">50%</button>
+        </div>
+      </section>
+
+      <section>
+        <h2>Color</h2>
+        <div class="swatches" id="swatches">
+          <button class="sw" style="background:#ff0000" data-h="0" data-s="100" aria-label="Red" title="Red"></button>
+          <button class="sw" style="background:#d6002a" data-h="350" data-s="100" aria-label="Deep red" title="Deep red"></button>
+          <button class="sw" style="background:#ff2a00" data-h="10" data-s="100" aria-label="Fire red" title="Fire red"></button>
+          <button class="sw" style="background:#ff5a00" data-h="20" data-s="100" aria-label="Orange" title="Orange"></button>
+          <button class="sw" style="background:#ffb000" data-h="40" data-s="100" aria-label="Amber" title="Amber"></button>
+          <button class="sw" style="background:#ffe600" data-h="55" data-s="100" aria-label="Yellow" title="Yellow"></button>
+          <button class="sw" style="background:#7dff00" data-h="90" data-s="100" aria-label="Lime" title="Lime"></button>
+          <button class="sw" style="background:#00e040" data-h="130" data-s="100" aria-label="Green" title="Green"></button>
+          <button class="sw" style="background:#00e0b0" data-h="165" data-s="100" aria-label="Teal" title="Teal"></button>
+          <button class="sw" style="background:#00d8ff" data-h="190" data-s="100" aria-label="Cyan" title="Cyan"></button>
+          <button class="sw" style="background:#8fd0ff" data-h="205" data-s="45" aria-label="Ice blue" title="Ice blue"></button>
+          <button class="sw" style="background:#2060ff" data-h="225" data-s="100" aria-label="Blue" title="Blue"></button>
+          <button class="sw" style="background:#3a20ff" data-h="245" data-s="100" aria-label="Royal blue" title="Royal blue"></button>
+          <button class="sw" style="background:#a020ff" data-h="280" data-s="100" aria-label="Purple" title="Purple"></button>
+          <button class="sw" style="background:#ff00d0" data-h="310" data-s="100" aria-label="Magenta" title="Magenta"></button>
+          <button class="sw" style="background:#ff6fae" data-h="335" data-s="60" aria-label="Pink" title="Pink"></button>
+          <button class="sw" style="background:#ffd9a8" data-h="35" data-s="30" aria-label="Warm white" title="Warm white"></button>
+          <button class="sw" style="background:#ffffff" data-h="0" data-s="0" aria-label="White" title="White"></button>
+        </div>
+        <div class="slider-head"><span class="note">Hue</span><span class="val" id="hval">0°</span></div>
+        <input type="range" id="hue" min="0" max="359" step="1" value="0" aria-label="Hue">
+        <div class="slider-head"><span class="note">Saturation (low = whiter)</span><span class="val" id="sval">100%</span></div>
+        <input type="range" id="sat" min="0" max="100" step="1" value="100" aria-label="Saturation">
+        <button id="solid">Color not changing? Switch to solid color mode</button>
+      </section>
+
+      <section>
+        <h2>Power</h2>
+        <div class="power"><span>All lights</span><button data-pw="193" data-v="1">On</button><button data-pw="193" data-v="0">Off</button></div>
+        <div class="power"><span>Front</span><button data-pw="194" data-v="1">On</button><button data-pw="194" data-v="0">Off</button></div>
+        <div class="power"><span>Back</span><button data-pw="195" data-v="1">On</button><button data-pw="195" data-v="0">Off</button></div>
+        <label class="check"><input type="checkbox" id="anim" checked> Play animation when I turn all lights on or off</label>
+        <label class="check"><input type="checkbox" id="autoon" checked> Turn on with the animation as soon as I connect</label>
+        <div class="row" id="styles">
+          <button data-style="chase" class="sel">Color chase</button>
+          <button data-style="keep">Keep my color</button>
+        </div>
+        <p class="note">Color chase sweeps colors, then lands on the last color you picked in Celica Glow. Keep my color never changes the color: the zones light up one at a time and fade in, so it keeps whatever the controller already had, even a color you set in the GuanQi app.</p>
+        <button id="playanim">Play on animation now</button>
+        <p class="note">On: colors chase between Zone 1 and Zone 2 while brightness builds, then everything fills to your color. Off: a short chase, then the zones shut off one at a time. The phone runs this, so Celica Glow has to be open and connected.</p>
+      </section>
+
+      <section>
+        <h2>Startup effect</h2>
+        <div class="row4" id="welcome">
+          <button data-w="0">Off</button><button data-w="1">Random</button>
+          <button data-w="2">Mode 1</button><button data-w="3">Mode 2</button><button data-w="4">Mode 3</button>
+          <button data-w="5">Mode 4</button><button data-w="6">Mode 5</button><button data-w="7">Mode 6</button>
+        </div>
+        <button id="replay">Try replaying startup (lights off, then on)</button>
+        <p class="note">These animations are built into the controller and play when it powers up. If the replay button doesn't trigger it, turn the car off and on to see it.</p>
+      </section>
+    </div>
+  </div>
+
+  <p class="note">Close the GuanQi app before connecting. The controller only accepts one phone at a time.</p>
+  <details><summary>Show command log</summary><pre id="log"></pre></details>
+</main>
+
+<script>
+(function(){
+  const SVC = 0xFFF0, WRITE = 0xFFF3, NOTIFY = 0xFFF4;
+  const $ = (s) => document.querySelector(s);
+  const $$ = (s) => Array.from(document.querySelectorAll(s));
+  let dev = null, wr = null, zone = 0;
+  const state = { b: 10, h: 0, s: 100 };
+
+  try { const saved = JSON.parse(localStorage.getItem("celicaGlow") || "{}"); Object.assign(state, saved); } catch (e) {}
+  const save = () => { try { localStorage.setItem("celicaGlow", JSON.stringify(state)); } catch (e) {} };
+
+  if (!navigator.bluetooth) { $("#nobt").hidden = false; $("#connect").disabled = true; }
+
+  const hex = (arr) => Array.from(arr).map(x => x.toString(16).padStart(2, "0").toUpperCase()).join(" ");
+  function log(msg){ const el = $("#log"); el.textContent = (new Date().toLocaleTimeString() + "  " + msg + "\n" + el.textContent).slice(0, 6000); }
+
+  // Packet: BC, command, length, data..., checksum (sum & 0xFF), 55
+  function packet(bytes){ const sum = bytes.reduce((a, b) => (a + b) & 255, 0); return new Uint8Array([...bytes, sum, 0x55]); }
+
+  let queue = Promise.resolve();
+  function send(bytes){
+    if (!wr) return;
+    const pkt = packet(bytes);
+    queue = queue.then(async () => {
+      try {
+        if (wr.writeValueWithResponse) await wr.writeValueWithResponse(pkt); else await wr.writeValue(pkt);
+        log("sent " + hex(pkt));
+      } catch (e) { log("send failed: " + e.message); }
+    });
+    return queue;
+  }
+
+  const cmd = {
+    bright: (z, v) => send([0xBC, 0xD3, 2, z, Math.max(1, Math.min(100, v))]),
+    color: (z, h, s) => { const sv = Math.round(s * 10); return send([0xBC, 0xB2, 5, z, (h >> 8) & 255, h & 255, (sv >> 8) & 255, sv & 255]); },
+    power: (code, on) => send([0xBC, code, 1, on ? 1 : 0]),
+    solid: (z) => { send([0xBC, 0xA4, 1, 0]); send([0xBC, 0xA1, 4, z, 1, 4, 100]); },
+    sync: () => send([0xBC, 0xE2, 0])
+  };
+
+  function throttle(fn, ms){ let t = 0, pend = null; return (...a) => { pend = a; if (t) return; fn(...pend); pend = null; t = setTimeout(() => { t = 0; if (pend) fn(...pend); pend = null; }, ms); }; }
+  const sendBright = throttle(() => cmd.bright(zone, state.b), 150);
+  const sendColor = throttle(() => cmd.color(zone, state.h, state.s), 150);
+
+  function render(){
+    $("#bright").value = state.b; $("#bval").textContent = state.b + "%";
+    $("#hue").value = state.h; $("#hval").textContent = state.h + "°";
+    $("#sat").value = state.s; $("#sval").textContent = state.s + "%";
+    $$(".sw").forEach(b => b.classList.toggle("sel", +b.dataset.h === state.h && +b.dataset.s === state.s));
+    const glow = "hsl(" + state.h + " " + state.s + "% " + (50 + (100 - state.s) / 2) + "%)";
+    document.documentElement.style.setProperty("--glow", glow);
+    $("#glow").style.opacity = (0.25 + 0.75 * state.b / 100).toFixed(2);
+  }
+  render();
+
+  function setConnected(on, name){
+    $("#dot").classList.toggle("on", on);
+    $("#status").textContent = on ? (name || "Connected") : "Not connected";
+    $("#controls").classList.toggle("disabled", !on);
+    $("#connect").textContent = on ? "Disconnect" : "Connect to lights";
+  }
+
+  function onNotify(ev){
+    const v = new Uint8Array(ev.target.value.buffer);
+    log("reply " + hex(v));
+    // CC E2 0C: switch states, speed, tempo, brightness (all, zone 1, zone 2)
+    if (v[0] === 0xCC && v[1] === 0xE2 && v[2] === 0x0C && v.length >= 15) {
+      const global = v[11];
+      if (global >= 1 && global <= 100) { state.b = global; render(); }
+    }
+  }
+
+  $("#connect").addEventListener("click", async () => {
+    if (dev && dev.gatt.connected) { dev.gatt.disconnect(); return; }
+    try {
+      $("#status").textContent = "Searching...";
+      dev = await navigator.bluetooth.requestDevice({ filters: [{ namePrefix: "GQCL" }], optionalServices: [SVC] });
+      dev.addEventListener("gattserverdisconnected", () => { wr = null; setConnected(false); log("disconnected"); });
+      $("#status").textContent = "Connecting...";
+      const server = await dev.gatt.connect();
+      const svc = await server.getPrimaryService(SVC);
+      wr = await svc.getCharacteristic(WRITE);
+      try { const nt = await svc.getCharacteristic(NOTIFY); await nt.startNotifications(); nt.addEventListener("characteristicvaluechanged", onNotify); } catch (e) { log("replies unavailable: " + e.message); }
+      setConnected(true, dev.name);
+      log("connected to " + dev.name);
+      cmd.sync();
+      // Wait briefly for the controller's status reply so the animation ends at its current brightness
+      if ($("#autoon").checked) { await queue; await sleep(800); animOn(); }
+    } catch (e) {
+      setConnected(false);
+      $("#status").textContent = e.name === "NotFoundError" ? "No device picked" : "Couldn't connect";
+      log("connect error: " + e.message);
+    }
+  });
+
+  $("#bright").addEventListener("input", (e) => { state.b = +e.target.value; render(); sendBright(); save(); });
+  $$("[data-b]").forEach(b => b.addEventListener("click", () => { state.b = +b.dataset.b; render(); cmd.bright(zone, state.b); save(); }));
+  $("#hue").addEventListener("input", (e) => { state.h = +e.target.value; render(); sendColor(); save(); });
+  $("#sat").addEventListener("input", (e) => { state.s = +e.target.value; render(); sendColor(); save(); });
+  $$(".sw").forEach(b => b.addEventListener("click", () => { state.h = +b.dataset.h; state.s = +b.dataset.s; render(); cmd.color(zone, state.h, state.s); save(); }));
+  $$("#zones button").forEach(b => b.addEventListener("click", () => { zone = +b.dataset.zone; $$("#zones button").forEach(x => x.classList.toggle("sel", x === b)); }));
+  // Phone-driven on/off animation (zone-level chase + brightness build)
+  const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+  let busy = false;
+  if (state.anim === false) $("#anim").checked = false;
+  $("#anim").addEventListener("change", (e) => { state.anim = e.target.checked; save(); });
+  if (state.autoOn === false) $("#autoon").checked = false;
+  $("#autoon").addEventListener("change", (e) => { state.autoOn = e.target.checked; save(); });
+
+  if (state.style !== "keep") state.style = "chase";
+  $$("[data-style]").forEach(b => {
+    b.classList.toggle("sel", b.dataset.style === state.style);
+    b.addEventListener("click", () => { state.style = b.dataset.style; save(); $$("[data-style]").forEach(x => x.classList.toggle("sel", x === b)); });
+  });
+
+  async function keepOn(){
+    const top = Math.max(state.b, 30);
+    cmd.bright(0, 1);
+    cmd.power(195, 0); cmd.power(193, 1); cmd.power(194, 1);
+    await queue;
+    for (let i = 1; i <= 6; i++) { await cmd.bright(0, Math.round(1 + (top - 1) * i / 12)); await sleep(70); }
+    await cmd.power(195, 1);
+    for (let i = 7; i <= 12; i++) { await cmd.bright(0, Math.round(1 + (top - 1) * i / 12)); await sleep(70); }
+    await sleep(250);
+    await cmd.bright(0, state.b);
+  }
+
+  async function animOn(){
+    if (busy || !wr) return; busy = true; $("#playanim").classList.add("busy");
+    try {
+      if (state.style === "keep") { await keepOn(); return; }
+      const top = Math.max(state.b, 30);
+      cmd.solid(0);
+      cmd.bright(0, 5);
+      cmd.power(193, 1); cmd.power(194, 1); cmd.power(195, 1);
+      await queue;
+      for (let i = 0; i < 16; i++) {
+        const h = (i * 24) % 360;
+        cmd.color(1, h, 100);
+        cmd.color(2, (h + 180) % 360, 100);
+        if (i % 3 === 0) cmd.bright(0, Math.round(5 + (top - 5) * i / 15));
+        await queue; await sleep(60);
+      }
+      cmd.color(0, state.h, state.s);
+      cmd.bright(0, top);
+      await queue; await sleep(300);
+      await cmd.bright(0, state.b);
+    } finally { busy = false; $("#playanim").classList.remove("busy"); }
+  }
+
+  async function animOff(){
+    if (busy || !wr) return; busy = true;
+    try {
+      if (state.style !== "keep") {
+        for (let i = 0; i < 8; i++) {
+          const h = (state.h + i * 45) % 360;
+          cmd.color(1, h, 100);
+          cmd.color(2, (h + 180) % 360, 100);
+          await queue; await sleep(60);
+        }
+        cmd.color(0, state.h, state.s);
+      }
+      await cmd.power(195, 0); await sleep(250);
+      await cmd.power(194, 0); await sleep(250);
+      await cmd.power(193, 0);
+    } finally { busy = false; }
+  }
+
+  $$("[data-pw]").forEach(b => b.addEventListener("click", () => {
+    const code = +b.dataset.pw, on = b.dataset.v === "1";
+    if (code === 193 && $("#anim").checked) { on ? animOn() : animOff(); return; }
+    cmd.power(code, on);
+  }));
+  $("#playanim").addEventListener("click", animOn);
+  $$("[data-w]").forEach(b => b.addEventListener("click", () => { send([0xBC, 0xC5, 1, +b.dataset.w]); $$("[data-w]").forEach(x => x.classList.toggle("sel", x === b)); }));
+  $("#replay").addEventListener("click", () => { cmd.power(193, 0); setTimeout(() => cmd.power(193, 1), 1500); });
+  $("#solid").addEventListener("click", () => { cmd.solid(zone); cmd.color(zone, state.h, state.s); });
+
+  const presets = {
+    night: () => { cmd.power(193, 1); cmd.color(0, 0, 100); cmd.bright(0, 3); Object.assign(state, { h: 0, s: 100, b: 3 }); },
+    dim:   () => { cmd.power(193, 1); cmd.color(0, 0, 100); cmd.bright(0, 10); Object.assign(state, { h: 0, s: 100, b: 10 }); },
+    show:  () => { cmd.power(193, 1); cmd.color(0, 0, 100); cmd.bright(0, 100); Object.assign(state, { h: 0, s: 100, b: 100 }); },
+    off:   () => { $("#anim").checked ? animOff() : cmd.power(193, 0); }
+  };
+  $$("[data-preset]").forEach(b => b.addEventListener("click", () => { presets[b.dataset.preset](); render(); save(); }));
+})();
+</script>
+</body>
+</html>
