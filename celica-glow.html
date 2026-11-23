@@ -157,8 +157,11 @@ button.busy{opacity:.5}
         <div class="row" id="styles">
           <button data-style="chase" class="sel">Color chase</button>
           <button data-style="keep">Keep my color</button>
+          <button data-style="native">Controller startup</button>
         </div>
-        <p class="note">Color chase sweeps colors, then lands on the last color you picked in Celica Glow. Keep my color never changes the color: the zones light up one at a time and fade in, so it keeps whatever the controller already had, even a color you set in the GuanQi app.</p>
+        <p class="note">Controller startup turns the lights off and back on so the controller plays its own built-in startup effect (the mode picked under Startup effect), then switches to your saved color and brightness. Color chase sweeps colors, then lands on the last color you picked in Celica Glow. Keep my color never changes the color: the zones light up one at a time and fade in, so it keeps whatever the controller already had, even a color you set in the GuanQi app.</p>
+        <div class="slider-head"><span class="note">Controller startup: wait before switching to my color</span><span class="val" id="waitval">4 s</span></div>
+        <input type="range" id="wait" min="1" max="10" step="1" value="4" aria-label="Seconds to wait after the startup effect">
         <button id="playanim">Play on animation now</button>
         <p class="note">On: colors chase between Zone 1 and Zone 2 while brightness builds, then everything fills to your color. Off: a short chase, then the zones shut off one at a time. The phone runs this, so Celica Glow has to be open and connected.</p>
       </section>
@@ -298,7 +301,7 @@ button.busy{opacity:.5}
   if (state.autoOn === false) $("#autoon").checked = false;
   $("#autoon").addEventListener("change", (e) => { state.autoOn = e.target.checked; save(); });
 
-  if (state.style !== "keep") state.style = "chase";
+  if (!["keep","native"].includes(state.style)) state.style = "chase";
   $$("[data-style]").forEach(b => {
     b.classList.toggle("sel", b.dataset.style === state.style);
     b.addEventListener("click", () => { state.style = b.dataset.style; save(); $$("[data-style]").forEach(x => x.classList.toggle("sel", x === b)); });
@@ -320,6 +323,16 @@ button.busy{opacity:.5}
     if (busy || !wr) return; busy = true; $("#playanim").classList.add("busy");
     try {
       if (state.style === "keep") { await keepOn(); return; }
+      if (state.style === "native") {
+        await cmd.power(193, 0); await sleep(700);
+        await send([0xBC, 0xC5, 1, state.wmode || 1]); await sleep(200);
+        await cmd.power(193, 1);
+        // Let the controller's own effect finish, then land on the saved color and brightness
+        await sleep(+(state.wait || 4) * 1000);
+        cmd.color(0, state.h, state.s);
+        await cmd.bright(0, state.b);
+        return;
+      }
       const top = Math.max(state.b, 30);
       cmd.solid(0);
       cmd.bright(0, 5);
@@ -342,7 +355,7 @@ button.busy{opacity:.5}
   async function animOff(){
     if (busy || !wr) return; busy = true;
     try {
-      if (state.style !== "keep") {
+      if (state.style === "chase") {
         for (let i = 0; i < 8; i++) {
           const h = (state.h + i * 45) % 360;
           cmd.color(1, h, 100);
@@ -363,7 +376,9 @@ button.busy{opacity:.5}
     cmd.power(code, on);
   }));
   $("#playanim").addEventListener("click", animOn);
-  $$("[data-w]").forEach(b => b.addEventListener("click", () => { send([0xBC, 0xC5, 1, +b.dataset.w]); $$("[data-w]").forEach(x => x.classList.toggle("sel", x === b)); }));
+  if (state.wait) { $("#wait").value = state.wait; $("#waitval").textContent = state.wait + " s"; }
+  $("#wait").addEventListener("input", (e) => { state.wait = +e.target.value; $("#waitval").textContent = state.wait + " s"; save(); });
+  $$("[data-w]").forEach(b => { b.classList.toggle("sel", +b.dataset.w === state.wmode); b.addEventListener("click", () => { state.wmode = +b.dataset.w; save(); send([0xBC, 0xC5, 1, +b.dataset.w]); $$("[data-w]").forEach(x => x.classList.toggle("sel", x === b)); }); });
   $("#replay").addEventListener("click", () => { cmd.power(193, 0); setTimeout(() => cmd.power(193, 1), 1500); });
   $("#solid").addEventListener("click", () => { cmd.solid(zone); cmd.color(zone, state.h, state.s); });
 
