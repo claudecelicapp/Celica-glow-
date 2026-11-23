@@ -83,6 +83,8 @@ button.busy{opacity:.5}
   <div class="warn" id="nobt" hidden>This browser can't use Bluetooth. On iPhone, open this file in the free <b>Bluefy</b> browser. On Android or a computer, use Chrome.</div>
 
   <button class="primary" id="connect">Connect to lights</button>
+  <button id="connectall">Not showing up? Search all devices</button>
+  <p class="note" id="err" hidden></p>
 
   <div id="controls" class="disabled">
     <div class="stack">
@@ -180,7 +182,7 @@ button.busy{opacity:.5}
 
 <script>
 (function(){
-  const SVC = 0xFFF0, WRITE = 0xFFF3, NOTIFY = 0xFFF4;
+  const SVC = "0000fff0-0000-1000-8000-00805f9b34fb", WRITE = "0000fff3-0000-1000-8000-00805f9b34fb", NOTIFY = "0000fff4-0000-1000-8000-00805f9b34fb";
   const $ = (s) => document.querySelector(s);
   const $$ = (s) => Array.from(document.querySelectorAll(s));
   let dev = null, wr = null, zone = 0;
@@ -250,11 +252,17 @@ button.busy{opacity:.5}
     }
   }
 
-  $("#connect").addEventListener("click", async () => {
-    if (dev && dev.gatt.connected) { dev.gatt.disconnect(); return; }
+  function showErr(msg){ const el = $("#err"); el.textContent = msg || ""; el.hidden = !msg; }
+  async function connect(all){
+    if (dev && dev.gatt && dev.gatt.connected) { dev.gatt.disconnect(); return; }
+    showErr("");
+    if (!navigator.bluetooth) { showErr("Bluetooth isn't available in this browser. Open this page in Bluefy."); return; }
     try {
       $("#status").textContent = "Searching...";
-      dev = await navigator.bluetooth.requestDevice({ filters: [{ namePrefix: "GQCL" }], optionalServices: [SVC] });
+      const opts = all
+        ? { acceptAllDevices: true, optionalServices: [SVC] }
+        : { filters: [{ namePrefix: "GQCL" }, { services: [SVC] }], optionalServices: [SVC] };
+      dev = await navigator.bluetooth.requestDevice(opts);
       dev.addEventListener("gattserverdisconnected", () => { wr = null; setConnected(false); log("disconnected"); });
       $("#status").textContent = "Connecting...";
       const server = await dev.gatt.connect();
@@ -269,9 +277,12 @@ button.busy{opacity:.5}
     } catch (e) {
       setConnected(false);
       $("#status").textContent = e.name === "NotFoundError" ? "No device picked" : "Couldn't connect";
-      log("connect error: " + e.message);
+      showErr("Connect error: " + (e.name || "") + " " + (e.message || e));
+      log("connect error: " + e.name + " " + e.message);
     }
-  });
+  }
+  $("#connect").addEventListener("click", () => connect(false));
+  $("#connectall").addEventListener("click", () => connect(true));
 
   $("#bright").addEventListener("input", (e) => { state.b = +e.target.value; render(); sendBright(); save(); });
   $$("[data-b]").forEach(b => b.addEventListener("click", () => { state.b = +b.dataset.b; render(); cmd.bright(zone, state.b); save(); }));
