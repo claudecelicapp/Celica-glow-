@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600&family=Archivo+Narrow:wght@400;700&family=JetBrains+Mono:wght@400;500&display=swap">
 <style>
-/* Layout: single column instrument panel; monochrome, color only where it is the setting itself */
+/* Layout: single column instrument panel with a tab strip; monochrome, color only where it is the setting itself */
 :root{
   --bg:#000; --fg:#f5f5f5; --muted:#8a8a8a; --line:#242424; --line-strong:#3a3a3a; --raise:#0e0e0e;
   --glow:hsl(0 100% 50%);
@@ -17,10 +17,11 @@
   color-scheme:dark;
 }
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 html,body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);-webkit-font-smoothing:antialiased}
 body{padding-block:calc(env(safe-area-inset-top,0px) + 18px) calc(env(safe-area-inset-bottom,0px) + 32px);
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
-main{max-width:460px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+main{max-width:460px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
 header{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
 h1{font-family:var(--display);font-weight:700;font-size:34px;line-height:.9;letter-spacing:.06em;margin:0;text-transform:uppercase}
 h1 span{font-weight:400;color:var(--muted)}
@@ -28,19 +29,28 @@ h1 span{font-weight:400;color:var(--muted)}
 .dot{width:8px;height:8px;border-radius:50%;border:1px solid var(--muted)}
 .dot.on{background:var(--fg);border-color:var(--fg)}
 .glow{height:3px;border-radius:2px;background:var(--glow);box-shadow:0 0 18px 2px var(--glow);opacity:.9;transition:background .2s,box-shadow .2s,opacity .2s}
+.tabs{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:0 -2px;padding:2px}
+.tabs::-webkit-scrollbar{display:none}
+.tabs button{flex:none;padding:9px 13px;font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase}
+.panel{display:flex;flex-direction:column;gap:18px}
 section{border-top:1px solid var(--line);padding-top:16px;display:flex;flex-direction:column;gap:12px}
 h2{font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin:0;font-weight:500}
-button{font:inherit;font-size:14px;letter-spacing:.02em;color:var(--fg);background:transparent;border:1px solid var(--line-strong);border-radius:4px;padding:12px 10px;cursor:pointer;transition:background .15s,color .15s,border-color .15s}
+button,select,input[type=number]{font:inherit;font-size:14px;letter-spacing:.02em;color:var(--fg);background:transparent;border:1px solid var(--line-strong);border-radius:4px;padding:12px 10px;cursor:pointer;transition:background .15s,color .15s,border-color .15s}
+select{appearance:none;-webkit-appearance:none;width:100%;min-width:0;background:var(--raise);padding-right:30px;background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:calc(100% - 16px) 50%,calc(100% - 11px) 50%;background-size:5px 5px;background-repeat:no-repeat}
+input[type=number]{width:84px;cursor:text;background:var(--raise);font-family:var(--mono);font-variant-numeric:tabular-nums}
 button:hover{border-color:var(--fg)}
 button:active{transform:scale(.98)}
-button:focus-visible,input:focus-visible{outline:1px solid var(--fg);outline-offset:3px}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:1px solid var(--fg);outline-offset:3px}
 button.primary{background:var(--fg);color:var(--bg);border-color:var(--fg);font-weight:600;letter-spacing:.12em;text-transform:uppercase;font-size:13px;padding:15px}
 button.sel{background:var(--fg);color:var(--bg);border-color:var(--fg)}
 .row{display:grid;grid-template-columns:repeat(auto-fit,minmax(84px,1fr));gap:8px}
+.row2{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.row3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .row4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
 .row5{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
-.row5 button{padding:12px 0}
-.row3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.row5 button,.row4 button{padding:12px 0}
+.pick{display:grid;grid-template-columns:44px 1fr 44px;gap:8px;align-items:stretch}
+.pick button{padding:0;font-size:16px}
 .slider-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
 .big{font-family:var(--mono);font-size:30px;font-weight:500;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
 .val{font-family:var(--mono);font-size:12px;color:var(--fg);font-variant-numeric:tabular-nums}
@@ -49,20 +59,23 @@ input[type=range]::-webkit-slider-runnable-track{height:2px;background:var(--lin
 input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;margin-top:-10px;border-radius:50%;background:var(--fg);border:0}
 input[type=range]::-moz-range-track{height:2px;background:var(--line-strong)}
 input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:var(--fg);border:0}
-#hue::-webkit-slider-runnable-track{height:6px;background:linear-gradient(90deg,#f00,#ff0,#0f0,#0ff,#00f,#f0f,#f00);border-radius:3px}
-#hue::-webkit-slider-thumb{margin-top:-8px;border:3px solid var(--bg)}
-#hue::-moz-range-track{height:6px;background:linear-gradient(90deg,#f00,#ff0,#0f0,#0ff,#00f,#f0f,#f00)}
+.hue::-webkit-slider-runnable-track{height:6px;background:linear-gradient(90deg,#f00,#ff0,#0f0,#0ff,#00f,#f0f,#f00);border-radius:3px}
+.hue::-webkit-slider-thumb{margin-top:-8px;border:3px solid var(--bg)}
+.hue::-moz-range-track{height:6px;background:linear-gradient(90deg,#f00,#ff0,#0f0,#0ff,#00f,#f0f,#f00)}
 .swatches{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
 .sw{aspect-ratio:1;border-radius:50%;padding:0;max-width:100%;border:1px solid var(--line-strong)}
 .sw.sel{outline:1px solid var(--fg);outline-offset:3px}
 .power{display:grid;grid-template-columns:1fr 64px 64px;gap:8px;align-items:center}
 .power span{font-size:14px}
 .power button{padding:9px 0}
+.seg{display:grid;grid-template-columns:1fr 84px 92px;gap:8px;align-items:center}
+.seg span{font-size:14px}
+.seg .lr{display:grid;grid-template-columns:1fr 1fr;gap:4px}
+.seg .lr button{padding:9px 0;font-size:12px}
 .note{font-size:12.5px;color:var(--muted);line-height:1.55;margin:0}
 .warn{border:1px solid var(--fg);border-radius:4px;padding:12px;font-size:14px;line-height:1.5}
 details summary{cursor:pointer;color:var(--muted);font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase}
-#log{font-family:var(--mono);font-size:10.5px;color:var(--muted);max-height:180px;overflow:auto;white-space:pre-wrap;word-break:break-all;margin:10px 0 0}
-.stack{display:flex;flex-direction:column;gap:18px}
+#log{font-family:var(--mono);font-size:10.5px;color:var(--muted);max-height:200px;overflow:auto;white-space:pre-wrap;word-break:break-all;margin:10px 0 0}
 .check{display:flex;align-items:center;gap:10px;font-size:14px}
 .check input{-webkit-appearance:none;appearance:none;width:20px;height:20px;border:1px solid var(--line-strong);border-radius:3px;margin:0;flex:none;display:grid;place-content:center}
 .check input:checked{background:var(--fg);border-color:var(--fg)}
@@ -80,14 +93,32 @@ button.busy{opacity:.5}
   </header>
   <div class="glow" id="glow" aria-hidden="true"></div>
 
-  <div class="warn" id="nobt" hidden>This browser can't use Bluetooth. On iPhone, open this file in the free <b>Bluefy</b> browser. On Android or a computer, use Chrome.</div>
+  <div class="warn" id="nobt" hidden>This browser can't use Bluetooth. On iPhone, open this page in the free <b>Bluefy</b> browser. On Android or a computer, use Chrome.</div>
 
   <button class="primary" id="connect">Connect to lights</button>
   <button id="connectall">Not showing up? Search all devices</button>
   <p class="note" id="err" hidden></p>
 
+  <nav class="tabs" id="tabs" aria-label="Sections">
+    <button data-tab="home" class="sel">Home</button>
+    <button data-tab="color">Color</button>
+    <button data-tab="magic">Magic</button>
+    <button data-tab="rgbmagic">RGB + Magic</button>
+    <button data-tab="music">Music</button>
+    <button data-tab="startup">Startup</button>
+    <button data-tab="setup">Setup</button>
+  </nav>
+
   <div id="controls" class="disabled">
-    <div class="stack">
+
+    <!-- HOME -->
+    <div class="panel" data-panel="home">
+      <section>
+        <h2>Power</h2>
+        <div class="power"><span>All lights</span><button data-pw="193" data-v="1">On</button><button data-pw="193" data-v="0">Off</button></div>
+        <div class="power"><span>Front</span><button data-pw="194" data-v="1">On</button><button data-pw="194" data-v="0">Off</button></div>
+        <div class="power"><span>Back</span><button data-pw="195" data-v="1">On</button><button data-pw="195" data-v="0">Off</button></div>
+      </section>
       <section>
         <h2>Presets</h2>
         <div class="row4">
@@ -96,85 +127,181 @@ button.busy{opacity:.5}
           <button data-preset="show">Show</button>
           <button data-preset="off">Off</button>
         </div>
-        <p class="note">Night is red at 3%, Dim is red at 10%, Show is red at 100%.</p>
+        <p class="note">Night, Dim and Show use your saved color at 3%, 10% and 100%.</p>
       </section>
-
-      <section>
-        <h2>Zone</h2>
-        <div class="row3" id="zones">
-          <button data-zone="0" class="sel">All</button>
-          <button data-zone="1">Zone 1</button>
-          <button data-zone="2">Zone 2</button>
-        </div>
-        <p class="note">Brightness and color go to the zone you pick here.</p>
-      </section>
-
       <section>
         <h2>Brightness</h2>
+        <div class="row3" id="bzones">
+          <button data-bz="0" class="sel">All</button>
+          <button data-bz="1">Zone 1</button>
+          <button data-bz="2">Zone 2</button>
+        </div>
         <div class="slider-head"><span class="note">The stock app stops at 10%</span><span class="big" id="bval">10%</span></div>
         <input type="range" id="bright" min="1" max="100" step="1" value="10" aria-label="Brightness">
         <div class="row5">
           <button data-b="1">1%</button><button data-b="3">3%</button><button data-b="5">5%</button><button data-b="10">10%</button><button data-b="50">50%</button>
         </div>
       </section>
-
       <section>
-        <h2>Color</h2>
-        <div class="swatches" id="swatches">
-          <button class="sw" style="background:#ff0000" data-h="0" data-s="100" aria-label="Red" title="Red"></button>
-          <button class="sw" style="background:#d6002a" data-h="350" data-s="100" aria-label="Deep red" title="Deep red"></button>
-          <button class="sw" style="background:#ff2a00" data-h="10" data-s="100" aria-label="Fire red" title="Fire red"></button>
-          <button class="sw" style="background:#ff5a00" data-h="20" data-s="100" aria-label="Orange" title="Orange"></button>
-          <button class="sw" style="background:#ffb000" data-h="40" data-s="100" aria-label="Amber" title="Amber"></button>
-          <button class="sw" style="background:#ffe600" data-h="55" data-s="100" aria-label="Yellow" title="Yellow"></button>
-          <button class="sw" style="background:#7dff00" data-h="90" data-s="100" aria-label="Lime" title="Lime"></button>
-          <button class="sw" style="background:#00e040" data-h="130" data-s="100" aria-label="Green" title="Green"></button>
-          <button class="sw" style="background:#00e0b0" data-h="165" data-s="100" aria-label="Teal" title="Teal"></button>
-          <button class="sw" style="background:#00d8ff" data-h="190" data-s="100" aria-label="Cyan" title="Cyan"></button>
-          <button class="sw" style="background:#8fd0ff" data-h="205" data-s="45" aria-label="Ice blue" title="Ice blue"></button>
-          <button class="sw" style="background:#2060ff" data-h="225" data-s="100" aria-label="Blue" title="Blue"></button>
-          <button class="sw" style="background:#3a20ff" data-h="245" data-s="100" aria-label="Royal blue" title="Royal blue"></button>
-          <button class="sw" style="background:#a020ff" data-h="280" data-s="100" aria-label="Purple" title="Purple"></button>
-          <button class="sw" style="background:#ff00d0" data-h="310" data-s="100" aria-label="Magenta" title="Magenta"></button>
-          <button class="sw" style="background:#ff6fae" data-h="335" data-s="60" aria-label="Pink" title="Pink"></button>
-          <button class="sw" style="background:#ffd9a8" data-h="35" data-s="30" aria-label="Warm white" title="Warm white"></button>
-          <button class="sw" style="background:#ffffff" data-h="0" data-s="0" aria-label="White" title="White"></button>
+        <h2>Current mode</h2>
+        <div class="row3" id="topmodes">
+          <button data-top="0">RGB</button>
+          <button data-top="1">RGB + Magic</button>
+          <button data-top="2">Magic</button>
         </div>
+        <p class="note">Same as the three big buttons in the GuanQi app. Each mode remembers its own settings.</p>
+      </section>
+    </div>
+
+    <!-- COLOR (RGB mode) -->
+    <div class="panel" data-panel="color" hidden>
+      <section>
+        <h2>Solid color</h2>
+        <div class="row3" id="czones">
+          <button data-cz="0" class="sel">All</button>
+          <button data-cz="1">Zone 1</button>
+          <button data-cz="2">Zone 2</button>
+        </div>
+        <div class="swatches" id="swatches"></div>
         <div class="slider-head"><span class="note">Hue</span><span class="val" id="hval">0°</span></div>
-        <input type="range" id="hue" min="0" max="359" step="1" value="0" aria-label="Hue">
+        <input type="range" class="hue" id="hue" min="0" max="359" step="1" value="0" aria-label="Hue">
         <div class="slider-head"><span class="note">Saturation (low = whiter)</span><span class="val" id="sval">100%</span></div>
         <input type="range" id="sat" min="0" max="100" step="1" value="100" aria-label="Saturation">
-        <button id="solid">Color not changing? Switch to solid color mode</button>
+        <p class="note">Picking a color switches the lights to RGB mode and saves it as your color for presets and startup.</p>
       </section>
-
       <section>
-        <h2>Power</h2>
-        <div class="power"><span>All lights</span><button data-pw="193" data-v="1">On</button><button data-pw="193" data-v="0">Off</button></div>
-        <div class="power"><span>Front</span><button data-pw="194" data-v="1">On</button><button data-pw="194" data-v="0">Off</button></div>
-        <div class="power"><span>Back</span><button data-pw="195" data-v="1">On</button><button data-pw="195" data-v="0">Off</button></div>
-        <label class="check"><input type="checkbox" id="anim" checked> Play animation when I turn all lights on or off</label>
-        <label class="check"><input type="checkbox" id="autoon" checked> Turn on with the animation as soon as I connect</label>
-        <div class="row" id="styles">
-          <button data-style="chase" class="sel">Color chase</button>
-          <button data-style="keep">Keep my color</button>
-          <button data-style="native">Controller startup</button>
+        <h2>RGB effects</h2>
+        <div class="row2" id="depth">
+          <button data-depth="0">7 colors</button>
+          <button data-depth="1">64 colors</button>
         </div>
-        <p class="note">Controller startup turns the lights off and back on so the controller plays its own built-in startup effect (the mode picked under Startup effect), then switches to your saved color and brightness. Color chase sweeps colors, then lands on the last color you picked in Celica Glow. Keep my color never changes the color: the zones light up one at a time and fade in, so it keeps whatever the controller already had, even a color you set in the GuanQi app.</p>
-        <div class="slider-head"><span class="note">Controller startup: wait before switching to my color</span><span class="val" id="waitval">4 s</span></div>
-        <input type="range" id="wait" min="1" max="10" step="1" value="4" aria-label="Seconds to wait after the startup effect">
-        <button id="playanim">Play on animation now</button>
-        <p class="note">On: colors chase between Zone 1 and Zone 2 while brightness builds, then everything fills to your color. Off: a short chase, then the zones shut off one at a time. The phone runs this, so Celica Glow has to be open and connected.</p>
+        <div class="row4" id="rgbmodes">
+          <button data-rm="0">Breath</button>
+          <button data-rm="1">Gradient</button>
+          <button data-rm="4">Choice</button>
+          <button data-rm="2">Music</button>
+        </div>
+        <div id="choiceWrap" hidden>
+          <div class="pick"><button data-step="choice" data-d="-1" aria-label="Previous effect">‹</button><select id="choice" aria-label="Choice effect"></select><button data-step="choice" data-d="1" aria-label="Next effect">›</button></div>
+        </div>
+        <div id="rgbMusicWrap" hidden>
+          <div class="pick"><button data-step="rgbMusic" data-d="-1" aria-label="Previous style">‹</button><select id="rgbMusic" aria-label="Music style"></select><button data-step="rgbMusic" data-d="1" aria-label="Next style">›</button></div>
+        </div>
+        <div class="slider-head"><span class="note">RGB speed</span><span class="val" id="rspeedval">5</span></div>
+        <input type="range" id="rspeed" min="1" max="9" step="1" value="5" aria-label="RGB speed">
       </section>
+    </div>
 
+    <!-- MAGIC -->
+    <div class="panel" data-panel="magic" hidden>
       <section>
-        <h2>Startup effect</h2>
+        <h2>Magic effects</h2>
+        <div class="row3" id="mtypes">
+          <button data-mt="0">Magic</button>
+          <button data-mt="4">Colorful</button>
+          <button data-mt="5">Music</button>
+        </div>
+        <div class="pick"><button data-step="mlist" data-d="-1" aria-label="Previous effect">‹</button><select id="mlist" aria-label="Magic effect"></select><button data-step="mlist" data-d="1" aria-label="Next effect">›</button></div>
+        <div class="row2" id="dirs">
+          <button data-dir="0">Forward</button>
+          <button data-dir="1">Reverse</button>
+        </div>
+        <div class="slider-head"><span class="note">Magic speed</span><span class="val" id="mspeedval">5</span></div>
+        <input type="range" id="mspeed" min="1" max="9" step="1" value="5" aria-label="Magic speed">
+      </section>
+      <section>
+        <h2>Magic custom color</h2>
+        <div class="slider-head"><span class="note">Hue</span><span class="val" id="mhval">0°</span></div>
+        <input type="range" class="hue" id="mhue" min="0" max="359" step="1" value="0" aria-label="Magic color hue">
+        <p class="note">Some Magic effects use this color. It keeps the Magic effect running.</p>
+      </section>
+    </div>
+
+    <!-- RGB + MAGIC -->
+    <div class="panel" data-panel="rgbmagic" hidden>
+      <section>
+        <h2>RGB part</h2>
+        <div class="row4" id="rmmodes">
+          <button data-rmm="0">Breath</button>
+          <button data-rmm="1">Gradient</button>
+          <button data-rmm="4">Choice</button>
+          <button data-rmm="2">Music</button>
+        </div>
+        <p class="note">Uses the same color depth, Choice effect and Music style as the Color tab.</p>
+      </section>
+      <section>
+        <h2>Magic part</h2>
+        <div class="row3" id="rmtypes">
+          <button data-rmt="0">Magic</button>
+          <button data-rmt="4">Colorful</button>
+          <button data-rmt="5">Music</button>
+        </div>
+        <div class="pick"><button data-step="rmlist" data-d="-1" aria-label="Previous effect">‹</button><select id="rmlist" aria-label="Magic part effect"></select><button data-step="rmlist" data-d="1" aria-label="Next effect">›</button></div>
+      </section>
+    </div>
+
+    <!-- MUSIC -->
+    <div class="panel" data-panel="music" hidden>
+      <section>
+        <h2>Voice / music reaction</h2>
+        <div class="power"><span>Voice</span><button data-pw="198" data-v="1">On</button><button data-pw="198" data-v="0">Off</button></div>
+        <div class="slider-head"><span class="note">Music tempo (sensitivity)</span><span class="val" id="tempoval">5</span></div>
+        <input type="range" id="tempo" min="1" max="9" step="1" value="5" aria-label="Music tempo">
+        <p class="note">Music styles live in two places: Color tab, RGB effects, Music (Classic, Soft, Dynamic, Disco) and Magic tab, Music (Spectrum, Stretch, Wave and more).</p>
+        <div class="row2">
+          <button data-go="color">RGB music styles</button>
+          <button data-go="magic">Magic music styles</button>
+        </div>
+      </section>
+    </div>
+
+    <!-- STARTUP -->
+    <div class="panel" data-panel="startup" hidden>
+      <section>
+        <h2>Startup effect (controller)</h2>
         <div class="row4" id="welcome">
           <button data-w="0">Off</button><button data-w="1">Random</button>
           <button data-w="2">Mode 1</button><button data-w="3">Mode 2</button><button data-w="4">Mode 3</button>
           <button data-w="5">Mode 4</button><button data-w="6">Mode 5</button><button data-w="7">Mode 6</button>
         </div>
-        <button id="replay">Try replaying startup (lights off, then on)</button>
-        <p class="note">These animations are built into the controller and play when it powers up. If the replay button doesn't trigger it, turn the car off and on to see it.</p>
+        <p class="note">Plays when the controller powers up with the key. Random picks different colors each time; Mode 1 to 6 are fixed effects. After it plays, the lights go back to your saved look.</p>
+      </section>
+      <section>
+        <h2>When I turn the lights on</h2>
+        <label class="check"><input type="checkbox" id="anim" checked> Play an animation when I turn all lights on or off</label>
+        <label class="check"><input type="checkbox" id="autoon" checked> Turn on with the animation as soon as I connect</label>
+        <div class="row3" id="styles">
+          <button data-style="native">Controller</button>
+          <button data-style="chase">Color chase</button>
+          <button data-style="keep">Fade in</button>
+        </div>
+        <p class="note">Controller plays the startup effect above. Color chase and Fade in are run by the phone. All three finish on your saved look (color, effect and brightness).</p>
+        <div class="slider-head"><span class="note">Controller: wait before switching to my look</span><span class="val" id="waitval">4 s</span></div>
+        <input type="range" id="wait" min="1" max="10" step="1" value="4" aria-label="Seconds to wait after the startup effect">
+        <button id="playanim">Play on animation now</button>
+      </section>
+      <section>
+        <h2>Door warning</h2>
+        <div class="power"><span>Warning</span><button data-pw="196" data-v="1">On</button><button data-pw="196" data-v="0">Off</button></div>
+        <p class="note">Flashes the lights as an alert. It needs the wireless door modules to be installed and paired.</p>
+      </section>
+    </div>
+
+    <!-- SETUP -->
+    <div class="panel" data-panel="setup" hidden>
+      <section>
+        <h2>LED strip setup (Factor)</h2>
+        <p class="note">Only change these if an effect looks wrong, like it stops early or runs the wrong way. Count is the number of LEDs (8 to 300). L and R set the side or direction. Changes send as soon as you leave the box.</p>
+        <div id="segs" class="panel" style="gap:10px"></div>
+        <button id="readfactor">Read current values</button>
+      </section>
+      <section>
+        <h2>Door modules</h2>
+        <p class="note">Pair the wireless door lights once in the GuanQi app under Drive, Add Sub Device. Pairing needs a Bluetooth scan that web pages can't do. After that, Celica Glow controls them with everything else.</p>
+      </section>
+      <section>
+        <h2>Sync</h2>
+        <button id="syncall">Read all settings from the controller</button>
       </section>
     </div>
   </div>
@@ -185,26 +312,30 @@ button.busy{opacity:.5}
 
 <script>
 (function(){
+  const MODES = {"magic": ["Magic", "Shadow", "Wave", "Enthusiasm", "Serenity", "Fragrant", "Romance", "Dawn", "Evening Breeze", "Sea", "Sunset Glow", "Sparkler", "Quiet Wilderness", "Colorful"], "colorful": ["Meteor", "Glitter", "Magic", "7Color Flashing", "R-G-B Flashing", "Y-C-P Flashing", "7Color Gradient", "R-Y Gradient", "R-P Gradient", "G-C Gradient", "G-Y Gradient", "B-P Gradient", "Red Running", "Green Running", "Blue Running", "Yellow Running", "Cyan Running", "Purple Running", "White Running", "7Color Chase", "R-G-B Chase", "Y-C-P Chase", "7Color Floating", "R-G-B Floating", "Y-C-P Floating", "7Color Brushing", "R-G-B Brushing", "Y-C-P Brushing", "7Color Brushing", "R-G-B Brushing", "Y-C-P Brushing", "7Color OpenClosing", "R-G-B OpenClosing", "Y-C-P OpenClosing", "Red OpenClosing", "Green OpenClosing", "Blue OpenClosing", "Yellow OpenClosing", "Cyan OpenClosing", "Purple OpenClosing", "White OpenClosing", "7Color Ping-Pong", "R-G-B Ping-Pong", "Y-C-P Ping-Pong", "Red Ping-Pong", "Green Ping-Pong", "Blue Ping-Pong", "Yellow Ping-Pong", "Cyan Ping-Pong", "Purple Ping-Pong", "White Ping-Pong", "7Color Transition", "R-G-B Transition", "P-C-Y Transition", "R-G Transition", "G-B Transition", "Y-B Transition", "C-Y Transition", "P-C Transition", "Black-White", "7Color Waterfall", "R-G-B Waterfall", "P-C-Y Waterfall", "R-G Waterfall", "G-B Waterfall", "Y-B Waterfall", "C-Y Waterfall", "P-C Waterfall", "Black-White", "W-R-W Flowing", "W-G-W Flowing", "W-B-W Flowing", "W-Y-W Flowing", "W-C-W Flowing", "W-P-W Flowing", "R-W-R Flowing", "G-W-G Flowing", "B-W-B Flowing", "Y-W-Y Flowing", "C-W-C Flowing", "P-W-P Flowing", "7Color Tail", "Red Tail", "Green Tail", "Blue Tail", "Yellow Tail", "Cyan Tail", "Purple Tail", "White Tail", "Red Running", "Green Running", "Blue Running", "Yellow Running", "Cyan Running", "Purple Running", "White Running", "7Color Running", "W-R Running", "R-G Running", "G-B Running", "B-Y Running", "Y-B Running", "C-P Running", "P-W Running", "R-W Running", "R-7Color Running", "G-7Color Running", "B-7Color Running", "Y-7Color Running", "C-7Color Running", "P-7Color Running", "W-7Color Running", "B-G Running", "R-G Running", "B-R Running", "Y-C Running", "P-Y Running", "Y-W Running", "W-Y Running"], "magicMusic": ["Spectrum", "Stretch", "Wave", "Attraction", "Light Column", "Single Color"], "rgbChoice": ["7Color Flowing", "B-G-R Flowing", "P-B-Y Flowing", "R-G Flowing", "G-B Flowing", "Y-B Flowing", "Y-G Flowing", "B-P Flowing", "Black-White Flowing", "W-R-W Flowing", "W-G-W Flowing", "W-B-W Flowing", "W-Y-W Flowing", "W-C-W Flowing", "W-P-W Flowing", "R-W-R Flowing", "G-W-G Flowing", "B-W-B Flowing", "Y-W-Y Flowing", "C-W-C Flowing", "P-W-P Flowing", "Red Wave", "Green Wave", "Blue Wave", "Yellow Wave", "Cyan Wave", "Purple Wave", "White Wave", "7Color Wave", "W-R Wave", "R-G Wave", "G-B Wave", "B-Y Wave", "Y-B Wave", "B-P Wave", "P-W Wave", "R-W Wave", "R-7Color Wave", "G-7Color Wave", "B-7Color Wave", "Y-7Color Wave", "C-7Color Wave", "P-7Color Wave", "W-7Color Wave", "7Color Meteor", "Red Meteor"], "rgbMusic": ["Classic", "Soft", "Dynamic", "Disco"]};
   const SVC = "0000fff0-0000-1000-8000-00805f9b34fb", WRITE = "0000fff3-0000-1000-8000-00805f9b34fb", NOTIFY = "0000fff4-0000-1000-8000-00805f9b34fb";
   const $ = (s) => document.querySelector(s);
   const $$ = (s) => Array.from(document.querySelectorAll(s));
-  let dev = null, wr = null, zone = 0;
-  const state = { b: 10, h: 0, s: 100 };
+  const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+  let dev = null, wr = null, busy = false;
 
-  try { const saved = JSON.parse(localStorage.getItem("celicaGlow") || "{}"); Object.assign(state, saved); } catch (e) {}
+  // Saved state. "look" is what the lights return to after any animation.
+  const state = { b: 10, h: 0, s: 100, mh: 0, cz: 0, bz: 0, style: "native", wmode: 2, wait: 4, anim: true, autoOn: true,
+    depth: 1, rm: 4, choice: 0, rgbMusic: 0, mt: 4, midx: { 0: 0, 4: 0, 5: 0 }, dir: 0, rmm: 4, rmt: 4,
+    rspeed: 5, mspeed: 5, tempo: 5, look: "color", tab: "home" };
+  try { Object.assign(state, JSON.parse(localStorage.getItem("celicaGlow") || "{}")); } catch (e) {}
+  if (!["native", "chase", "keep"].includes(state.style)) state.style = "native";
   const save = () => { try { localStorage.setItem("celicaGlow", JSON.stringify(state)); } catch (e) {} };
 
-  if (!navigator.bluetooth) { $("#nobt").hidden = false; $("#connect").disabled = true; }
+  if (!navigator.bluetooth) { $("#nobt").hidden = false; }
 
   const hex = (arr) => Array.from(arr).map(x => x.toString(16).padStart(2, "0").toUpperCase()).join(" ");
-  function log(msg){ const el = $("#log"); el.textContent = (new Date().toLocaleTimeString() + "  " + msg + "\n" + el.textContent).slice(0, 6000); }
-
-  // Packet: BC, command, length, data..., checksum (sum & 0xFF), 55
+  function log(msg){ const el = $("#log"); el.textContent = (new Date().toLocaleTimeString() + "  " + msg + "\n" + el.textContent).slice(0, 8000); }
   function packet(bytes){ const sum = bytes.reduce((a, b) => (a + b) & 255, 0); return new Uint8Array([...bytes, sum, 0x55]); }
 
   let queue = Promise.resolve();
   function send(bytes){
-    if (!wr) return;
+    if (!wr) return Promise.resolve();
     const pkt = packet(bytes);
     queue = queue.then(async () => {
       try {
@@ -215,56 +346,134 @@ button.busy{opacity:.5}
     return queue;
   }
 
+  // Every command the GuanQi app sends to this controller type
   const cmd = {
-    bright: (z, v) => send([0xBC, 0xD3, 2, z, Math.max(1, Math.min(100, v))]),
+    power: (code, on) => send([0xBC, code, 1, on ? 1 : 0]),          // C1 all, C2 front, C3 back, C4 warning, C6 voice
+    welcome: (m) => send([0xBC, 0xC5, 1, m]),                          // 0 off, 1 random, 2-7 mode 1-6
+    top: (m) => send([0xBC, 0xA4, 1, m]),                              // 0 RGB, 1 RGB.Magic, 2 Magic
     color: (z, h, s) => { const sv = Math.round(s * 10); return send([0xBC, 0xB2, 5, z, (h >> 8) & 255, h & 255, (sv >> 8) & 255, sv & 255]); },
-    power: (code, on) => send([0xBC, code, 1, on ? 1 : 0]),
-    solid: (z) => { send([0xBC, 0xA4, 1, 0]); send([0xBC, 0xA1, 4, z, 1, 4, 100]); },
-    sync: () => send([0xBC, 0xE2, 0])
+    rgbfx: (depth, mode, param) => send([0xBC, 0xA1, 3, depth, mode, param]),
+    magic: (type, idx) => send([0xBC, 0xA2, 2, type, idx]),           // type 0 Magic, 4 Colorful, 5 Music
+    dir: (d) => send([0xBC, 0xD4, 1, d]),
+    rspeed: (v) => send([0xBC, 0xD1, 2, 0, v]),
+    mspeed: (v) => send([0xBC, 0xD1, 2, 1, v]),
+    tempo: (v) => send([0xBC, 0xD2, 1, v]),
+    bright: (z, v) => send([0xBC, 0xD3, 2, z, Math.max(1, Math.min(100, v))]),
+    factor: (seg, side, n) => send([0xBC, 0xB1, 4, seg, side, (n >> 8) & 255, n & 255]),
+    sync: (code) => send([0xBC, code, 0])                              // E1 main, E2 control, E3 factor, E4 mode
   };
+  const rgbParam = (mode) => mode === 2 ? state.rgbMusic : state.choice;
+
+  // Restore whatever the user last chose: solid color, RGB effect, Magic, or RGB + Magic
+  async function applyLook(){
+    if (state.look === "magic") { cmd.top(2); cmd.magic(state.mt, state.midx[state.mt] || 0); }
+    else if (state.look === "rgbfx") { cmd.top(0); cmd.rgbfx(state.depth, state.rm, rgbParam(state.rm)); }
+    else if (state.look === "rgbmagic") { cmd.top(1); cmd.rgbfx(state.depth, state.rmm, rgbParam(state.rmm)); cmd.magic(state.rmt, state.midx[state.rmt] || 0); }
+    else { cmd.top(0); cmd.color(state.cz, state.h, state.s); }
+    return cmd.bright(0, state.b);
+  }
 
   function throttle(fn, ms){ let t = 0, pend = null; return (...a) => { pend = a; if (t) return; fn(...pend); pend = null; t = setTimeout(() => { t = 0; if (pend) fn(...pend); pend = null; }, ms); }; }
-  const sendBright = throttle(() => cmd.bright(zone, state.b), 150);
-  const sendColor = throttle(() => cmd.color(zone, state.h, state.s), 150);
 
+  // ---------- UI building ----------
+  const SW = [["#ff0000",0,100,"Red"],["#d6002a",350,100,"Deep red"],["#ff2a00",10,100,"Fire red"],["#ff5a00",20,100,"Orange"],["#ffb000",40,100,"Amber"],["#ffe600",55,100,"Yellow"],
+    ["#7dff00",90,100,"Lime"],["#00e040",130,100,"Green"],["#00e0b0",165,100,"Teal"],["#00d8ff",190,100,"Cyan"],["#8fd0ff",205,45,"Ice blue"],["#2060ff",225,100,"Blue"],
+    ["#3a20ff",245,100,"Royal blue"],["#a020ff",280,100,"Purple"],["#ff00d0",310,100,"Magenta"],["#ff6fae",335,60,"Pink"],["#ffd9a8",35,30,"Warm white"],["#ffffff",0,0,"White"]];
+  SW.forEach(([c, h, s, n]) => { const b = document.createElement("button"); b.className = "sw"; b.style.background = c; b.dataset.h = h; b.dataset.s = s; b.setAttribute("aria-label", n); b.title = n; $("#swatches").appendChild(b); });
+
+  function fill(sel, list){ sel.innerHTML = ""; list.forEach((t, i) => { const o = document.createElement("option"); o.value = i; o.textContent = (i + 1) + "  " + t; sel.appendChild(o); }); }
+  fill($("#choice"), MODES.rgbChoice);
+  fill($("#rgbMusic"), MODES.rgbMusic);
+  const listFor = (t) => t === 0 ? MODES.magic : t === 4 ? MODES.colorful : MODES.magicMusic;
+
+  const SEGS = [["Central",0],["LF door",1],["RF door",2],["LR door",3],["RR door",4],["Strip 1",5],["Strip 2",6],["Strip 3",7],["Strip 4",8]];
+  const segState = SEGS.map(() => ({ side: 0, n: 100 }));
+  SEGS.forEach(([name, v], i) => {
+    const row = document.createElement("div"); row.className = "seg";
+    row.innerHTML = '<span></span><input type="number" min="8" max="300" step="1" aria-label="LED count"><div class="lr"><button data-side="0">L</button><button data-side="1">R</button></div>';
+    row.querySelector("span").textContent = name;
+    const inp = row.querySelector("input"); inp.id = "seg" + v; inp.value = 100;
+    inp.addEventListener("change", () => { let n = Math.round(+inp.value); if (!(n >= 8)) n = 8; if (n > 300) n = 300; inp.value = n; segState[i].n = n; cmd.factor(v, segState[i].side, n); });
+    row.querySelectorAll("[data-side]").forEach(b => b.addEventListener("click", () => { segState[i].side = +b.dataset.side; renderSeg(i, row); cmd.factor(v, segState[i].side, segState[i].n); }));
+    row.dataset.i = i; $("#segs").appendChild(row); renderSeg(i, row);
+  });
+  function renderSeg(i, row){ row = row || $$("#segs .seg")[i]; row.querySelector("input").value = segState[i].n; row.querySelectorAll("[data-side]").forEach(b => b.classList.toggle("sel", +b.dataset.side === segState[i].side)); }
+
+  // ---------- render ----------
+  const selIn = (q, attr, val) => $$(q).forEach(b => b.classList.toggle("sel", b.dataset[attr] == val));
   function render(){
     $("#bright").value = state.b; $("#bval").textContent = state.b + "%";
     $("#hue").value = state.h; $("#hval").textContent = state.h + "°";
     $("#sat").value = state.s; $("#sval").textContent = state.s + "%";
+    $("#mhue").value = state.mh; $("#mhval").textContent = state.mh + "°";
     $$(".sw").forEach(b => b.classList.toggle("sel", +b.dataset.h === state.h && +b.dataset.s === state.s));
+    selIn("#czones button", "cz", state.cz); selIn("#bzones button", "bz", state.bz);
+    selIn("#depth button", "depth", state.depth); selIn("#rgbmodes button", "rm", state.rm);
+    $("#choiceWrap").hidden = state.rm !== 4; $("#rgbMusicWrap").hidden = state.rm !== 2;
+    $("#choice").value = state.choice; $("#rgbMusic").value = state.rgbMusic;
+    selIn("#mtypes button", "mt", state.mt); fill($("#mlist"), listFor(state.mt)); $("#mlist").value = state.midx[state.mt] || 0;
+    selIn("#dirs button", "dir", state.dir);
+    selIn("#rmmodes button", "rmm", state.rmm); selIn("#rmtypes button", "rmt", state.rmt); fill($("#rmlist"), listFor(state.rmt)); $("#rmlist").value = state.midx[state.rmt] || 0;
+    ["rspeed", "mspeed", "tempo"].forEach(k => { $("#" + k).value = state[k]; $("#" + k + "val").textContent = state[k]; });
+    selIn("#welcome button", "w", state.wmode); selIn("#styles button", "style", state.style);
+    $("#anim").checked = state.anim; $("#autoon").checked = state.autoOn;
+    $("#wait").value = state.wait; $("#waitval").textContent = state.wait + " s";
+    selIn("#topmodes button", "top", state.look === "magic" ? 2 : state.look === "rgbmagic" ? 1 : 0);
+    selIn("#tabs button", "tab", state.tab); $$("[data-panel]").forEach(p => p.hidden = p.dataset.panel !== state.tab);
     const glow = "hsl(" + state.h + " " + state.s + "% " + (50 + (100 - state.s) / 2) + "%)";
     document.documentElement.style.setProperty("--glow", glow);
     $("#glow").style.opacity = (0.25 + 0.75 * state.b / 100).toFixed(2);
   }
   render();
 
+  // ---------- connection ----------
   function setConnected(on, name){
     $("#dot").classList.toggle("on", on);
     $("#status").textContent = on ? (name || "Connected") : "Not connected";
     $("#controls").classList.toggle("disabled", !on);
     $("#connect").textContent = on ? "Disconnect" : "Connect to lights";
   }
-
   function onNotify(ev){
     const v = new Uint8Array(ev.target.value.buffer);
     log("reply " + hex(v));
-    // CC E2 0C: switch states, speed, tempo, brightness (all, zone 1, zone 2)
-    if (v[0] === 0xCC && v[1] === 0xE2 && v[2] === 0x0C && v.length >= 15) {
-      const global = v[11];
-      if (global >= 1 && global <= 100) { state.b = global; render(); }
+    if (v[0] !== 0xCC) return;
+    if (v[1] === 0xE2 && v.length >= 15) { // switches, speeds, brightness
+      if (v[9] >= 1 && v[9] <= 9) state.rspeed = v[9];
+      if (v[10] >= 1 && v[10] <= 9) state.tempo = v[10];
+      if (v[11] >= 1 && v[11] <= 100) state.b = v[11];
+      if (v[14] >= 1 && v[14] <= 9) state.mspeed = v[14];
+      render(); save();
+    }
+    if (v[1] === 0xE1 && v.length >= 10) { // top mode, switches, startup effect
+      if (v[3] === 2) state.look = "magic"; else if (v[3] === 1) state.look = "rgbmagic"; else if (state.look === "magic" || state.look === "rgbmagic") state.look = "color";
+      if (v[7] <= 7) state.wmode = v[7];
+      render(); save();
+    }
+    if (v[1] === 0xE4 && v.length >= 10) { // current RGB / Magic settings
+      if (v[3] <= 1) state.depth = v[3];
+      if ([0, 1, 2, 4].includes(v[4])) state.rm = v[4];
+      if (v[4] === 2) state.rgbMusic = Math.min(v[5], MODES.rgbMusic.length - 1); else if (v[4] === 4) state.choice = Math.min(v[5], MODES.rgbChoice.length - 1);
+      if ([0, 4].includes(v[6])) state.midx[v[6]] = Math.min(v[7], listFor(v[6]).length - 1);
+      if (v[6] === 5) state.midx[5] = Math.min(v[9], MODES.magicMusic.length - 1);
+      if (v[8] <= 1) state.dir = v[8];
+      render(); save();
+    }
+    if (v[1] === 0xE3 && v.length >= 15) { // LED counts for central + doors
+      const bits = (v[3] << 8) | v[4];
+      for (let i = 0; i < 5; i++) { const n = (v[5 + i * 2] << 8) | v[6 + i * 2]; if (n >= 8 && n <= 300) segState[i].n = n; segState[i].side = (bits >> i) & 1; renderSeg(i); }
     }
   }
-
   function showErr(msg){ const el = $("#err"); el.textContent = msg || ""; el.hidden = !msg; }
+  async function syncAll(){ cmd.sync(0xE1); cmd.sync(0xE2); cmd.sync(0xE4); await cmd.sync(0xE3); }
+
   async function connect(all){
     if (dev && dev.gatt && dev.gatt.connected) { dev.gatt.disconnect(); return; }
     showErr("");
     if (!navigator.bluetooth) { showErr("Bluetooth isn't available in this browser. Open this page in Bluefy."); return; }
     try {
       $("#status").textContent = "Searching...";
-      const opts = all
-        ? { acceptAllDevices: true, optionalServices: [SVC] }
-        : { filters: [{ namePrefix: "GQCL" }, { services: [SVC] }], optionalServices: [SVC] };
+      const opts = all ? { acceptAllDevices: true, optionalServices: [SVC] }
+                       : { filters: [{ namePrefix: "GQCL" }, { services: [SVC] }], optionalServices: [SVC] };
       dev = await navigator.bluetooth.requestDevice(opts);
       dev.addEventListener("gattserverdisconnected", () => { wr = null; setConnected(false); log("disconnected"); });
       $("#status").textContent = "Connecting...";
@@ -274,9 +483,8 @@ button.busy{opacity:.5}
       try { const nt = await svc.getCharacteristic(NOTIFY); await nt.startNotifications(); nt.addEventListener("characteristicvaluechanged", onNotify); } catch (e) { log("replies unavailable: " + e.message); }
       setConnected(true, dev.name);
       log("connected to " + dev.name);
-      cmd.sync();
-      // Wait briefly for the controller's status reply so the animation ends at its current brightness
-      if ($("#autoon").checked) { await queue; await sleep(800); animOn(); }
+      await syncAll();
+      if (state.autoOn) { await sleep(600); animOn(); }
     } catch (e) {
       setConnected(false);
       $("#status").textContent = e.name === "NotFoundError" ? "No device picked" : "Couldn't connect";
@@ -287,82 +495,42 @@ button.busy{opacity:.5}
   $("#connect").addEventListener("click", () => connect(false));
   $("#connectall").addEventListener("click", () => connect(true));
 
-  $("#bright").addEventListener("input", (e) => { state.b = +e.target.value; render(); sendBright(); save(); });
-  $$("[data-b]").forEach(b => b.addEventListener("click", () => { state.b = +b.dataset.b; render(); cmd.bright(zone, state.b); save(); }));
-  $("#hue").addEventListener("input", (e) => { state.h = +e.target.value; render(); sendColor(); save(); });
-  $("#sat").addEventListener("input", (e) => { state.s = +e.target.value; render(); sendColor(); save(); });
-  $$(".sw").forEach(b => b.addEventListener("click", () => { state.h = +b.dataset.h; state.s = +b.dataset.s; render(); cmd.color(zone, state.h, state.s); save(); }));
-  $$("#zones button").forEach(b => b.addEventListener("click", () => { zone = +b.dataset.zone; $$("#zones button").forEach(x => x.classList.toggle("sel", x === b)); }));
-  // Phone-driven on/off animation (zone-level chase + brightness build)
-  const sleep = (ms) => new Promise(r => setTimeout(r, ms));
-  let busy = false;
-  if (state.anim === false) $("#anim").checked = false;
-  $("#anim").addEventListener("change", (e) => { state.anim = e.target.checked; save(); });
-  if (state.autoOn === false) $("#autoon").checked = false;
-  $("#autoon").addEventListener("change", (e) => { state.autoOn = e.target.checked; save(); });
-
-  if (!["keep","native"].includes(state.style)) state.style = "chase";
-  $$("[data-style]").forEach(b => {
-    b.classList.toggle("sel", b.dataset.style === state.style);
-    b.addEventListener("click", () => { state.style = b.dataset.style; save(); $$("[data-style]").forEach(x => x.classList.toggle("sel", x === b)); });
-  });
-
-  async function keepOn(){
-    const top = Math.max(state.b, 30);
-    cmd.bright(0, 1);
-    cmd.power(195, 0); cmd.power(193, 1); cmd.power(194, 1);
-    await queue;
-    for (let i = 1; i <= 6; i++) { await cmd.bright(0, Math.round(1 + (top - 1) * i / 12)); await sleep(70); }
-    await cmd.power(195, 1);
-    for (let i = 7; i <= 12; i++) { await cmd.bright(0, Math.round(1 + (top - 1) * i / 12)); await sleep(70); }
-    await sleep(250);
-    await cmd.bright(0, state.b);
-  }
-
+  // ---------- animations ----------
   async function animOn(){
     if (busy || !wr) return; busy = true; $("#playanim").classList.add("busy");
     try {
-      if (state.style === "keep") { await keepOn(); return; }
+      const top = Math.max(state.b, 30);
       if (state.style === "native") {
         await cmd.power(193, 0); await sleep(700);
-        await send([0xBC, 0xC5, 1, state.wmode || 1]); await sleep(200);
+        await cmd.welcome(state.wmode || 2); await sleep(200);
         await cmd.power(193, 1);
-        // Let the controller's own effect finish, then land on the saved color and brightness
         await sleep(+(state.wait || 4) * 1000);
-        cmd.color(0, state.h, state.s);
-        await cmd.bright(0, state.b);
-        return;
+        await applyLook();
+      } else if (state.style === "keep") {
+        await applyLook();
+        cmd.bright(0, 1); cmd.power(195, 0); cmd.power(193, 1); cmd.power(194, 1); await queue;
+        for (let i = 1; i <= 6; i++) { await cmd.bright(0, Math.round(1 + (top - 1) * i / 12)); await sleep(70); }
+        await cmd.power(195, 1);
+        for (let i = 7; i <= 12; i++) { await cmd.bright(0, Math.round(1 + (top - 1) * i / 12)); await sleep(70); }
+        await sleep(250); await cmd.bright(0, state.b);
+      } else {
+        cmd.top(0); cmd.bright(0, 5); cmd.power(193, 1); cmd.power(194, 1); cmd.power(195, 1); await queue;
+        for (let i = 0; i < 16; i++) {
+          const h = (i * 24) % 360;
+          cmd.color(1, h, 100); cmd.color(2, (h + 180) % 360, 100);
+          if (i % 3 === 0) cmd.bright(0, Math.round(5 + (top - 5) * i / 15));
+          await queue; await sleep(60);
+        }
+        await applyLook();
       }
-      const top = Math.max(state.b, 30);
-      cmd.solid(0);
-      cmd.bright(0, 5);
-      cmd.power(193, 1); cmd.power(194, 1); cmd.power(195, 1);
-      await queue;
-      for (let i = 0; i < 16; i++) {
-        const h = (i * 24) % 360;
-        cmd.color(1, h, 100);
-        cmd.color(2, (h + 180) % 360, 100);
-        if (i % 3 === 0) cmd.bright(0, Math.round(5 + (top - 5) * i / 15));
-        await queue; await sleep(60);
-      }
-      cmd.color(0, state.h, state.s);
-      cmd.bright(0, top);
-      await queue; await sleep(300);
-      await cmd.bright(0, state.b);
     } finally { busy = false; $("#playanim").classList.remove("busy"); }
   }
-
   async function animOff(){
     if (busy || !wr) return; busy = true;
     try {
       if (state.style === "chase") {
-        for (let i = 0; i < 8; i++) {
-          const h = (state.h + i * 45) % 360;
-          cmd.color(1, h, 100);
-          cmd.color(2, (h + 180) % 360, 100);
-          await queue; await sleep(60);
-        }
-        cmd.color(0, state.h, state.s);
+        for (let i = 0; i < 8; i++) { const h = (state.h + i * 45) % 360; cmd.color(1, h, 100); cmd.color(2, (h + 180) % 360, 100); await queue; await sleep(60); }
+        await applyLook();
       }
       await cmd.power(195, 0); await sleep(250);
       await cmd.power(194, 0); await sleep(250);
@@ -370,23 +538,88 @@ button.busy{opacity:.5}
     } finally { busy = false; }
   }
 
+  // ---------- events ----------
+  $$("#tabs button").forEach(b => b.addEventListener("click", () => { state.tab = b.dataset.tab; save(); render(); }));
+  $$("[data-go]").forEach(b => b.addEventListener("click", () => { state.tab = b.dataset.go; save(); render(); }));
+
   $$("[data-pw]").forEach(b => b.addEventListener("click", () => {
     const code = +b.dataset.pw, on = b.dataset.v === "1";
-    if (code === 193 && $("#anim").checked) { on ? animOn() : animOff(); return; }
+    if (code === 193 && state.anim) { on ? animOn() : animOff(); return; }
     cmd.power(code, on);
   }));
-  $("#playanim").addEventListener("click", animOn);
-  if (state.wait) { $("#wait").value = state.wait; $("#waitval").textContent = state.wait + " s"; }
-  $("#wait").addEventListener("input", (e) => { state.wait = +e.target.value; $("#waitval").textContent = state.wait + " s"; save(); });
-  $$("[data-w]").forEach(b => { b.classList.toggle("sel", +b.dataset.w === state.wmode); b.addEventListener("click", () => { state.wmode = +b.dataset.w; save(); send([0xBC, 0xC5, 1, +b.dataset.w]); $$("[data-w]").forEach(x => x.classList.toggle("sel", x === b)); }); });
-  $("#replay").addEventListener("click", () => { cmd.power(193, 0); setTimeout(() => cmd.power(193, 1), 1500); });
-  $("#solid").addEventListener("click", () => { cmd.solid(zone); cmd.color(zone, state.h, state.s); });
 
+  const sendBright = throttle(() => { cmd.bright(state.bz, state.b); }, 150);
+  $("#bright").addEventListener("input", (e) => { state.b = +e.target.value; render(); sendBright(); save(); });
+  $$("[data-b]").forEach(b => b.addEventListener("click", () => { state.b = +b.dataset.b; render(); cmd.bright(state.bz, state.b); save(); }));
+  $$("#bzones button").forEach(b => b.addEventListener("click", () => { state.bz = +b.dataset.bz; render(); save(); }));
+
+  $$("#topmodes button").forEach(b => b.addEventListener("click", () => {
+    const m = +b.dataset.top; state.look = m === 2 ? "magic" : m === 1 ? "rgbmagic" : (state.look === "rgbfx" ? "rgbfx" : "color");
+    save(); render(); applyLook();
+  }));
+
+  // Solid color (RGB mode)
+  function pickColor(){ state.look = "color"; render(); save(); cmd.top(0); cmd.color(state.cz, state.h, state.s); }
+  const sendColor = throttle(() => { cmd.color(state.cz, state.h, state.s); }, 150);
+  $("#hue").addEventListener("input", (e) => { state.h = +e.target.value; if (state.look !== "color") { pickColor(); return; } render(); sendColor(); save(); });
+  $("#sat").addEventListener("input", (e) => { state.s = +e.target.value; if (state.look !== "color") { pickColor(); return; } render(); sendColor(); save(); });
+  $$(".sw").forEach(b => b.addEventListener("click", () => { state.h = +b.dataset.h; state.s = +b.dataset.s; pickColor(); }));
+  $$("#czones button").forEach(b => b.addEventListener("click", () => { state.cz = +b.dataset.cz; render(); save(); }));
+
+  // RGB effects
+  function sendRgb(){ state.look = "rgbfx"; save(); render(); cmd.top(0); cmd.rgbfx(state.depth, state.rm, rgbParam(state.rm)); }
+  $$("#depth button").forEach(b => b.addEventListener("click", () => { state.depth = +b.dataset.depth; sendRgb(); }));
+  $$("#rgbmodes button").forEach(b => b.addEventListener("click", () => { state.rm = +b.dataset.rm; sendRgb(); }));
+  $("#choice").addEventListener("change", (e) => { state.choice = +e.target.value; sendRgb(); });
+  $("#rgbMusic").addEventListener("change", (e) => { state.rgbMusic = +e.target.value; sendRgb(); });
+  const sendRspeed = throttle(() => cmd.rspeed(state.rspeed), 150);
+  $("#rspeed").addEventListener("input", (e) => { state.rspeed = +e.target.value; render(); sendRspeed(); save(); });
+
+  // Magic
+  function sendMagic(){ state.look = "magic"; save(); render(); cmd.top(2); cmd.magic(state.mt, state.midx[state.mt] || 0); }
+  $$("#mtypes button").forEach(b => b.addEventListener("click", () => { state.mt = +b.dataset.mt; sendMagic(); }));
+  $("#mlist").addEventListener("change", (e) => { state.midx[state.mt] = +e.target.value; sendMagic(); });
+  $$("#dirs button").forEach(b => b.addEventListener("click", () => { state.dir = +b.dataset.dir; save(); render(); cmd.dir(state.dir); }));
+  const sendMspeed = throttle(() => cmd.mspeed(state.mspeed), 150);
+  $("#mspeed").addEventListener("input", (e) => { state.mspeed = +e.target.value; render(); sendMspeed(); save(); });
+  const sendMh = throttle(() => cmd.color(0, state.mh, 100), 150);
+  $("#mhue").addEventListener("input", (e) => { state.mh = +e.target.value; render(); sendMh(); save(); });
+
+  // RGB + Magic
+  function sendRM(){ state.look = "rgbmagic"; save(); render(); cmd.top(1); cmd.rgbfx(state.depth, state.rmm, rgbParam(state.rmm)); cmd.magic(state.rmt, state.midx[state.rmt] || 0); }
+  $$("#rmmodes button").forEach(b => b.addEventListener("click", () => { state.rmm = +b.dataset.rmm; sendRM(); }));
+  $$("#rmtypes button").forEach(b => b.addEventListener("click", () => { state.rmt = +b.dataset.rmt; sendRM(); }));
+  $("#rmlist").addEventListener("change", (e) => { state.midx[state.rmt] = +e.target.value; sendRM(); });
+
+  // Prev / next arrows for every list
+  $$("[data-step]").forEach(b => b.addEventListener("click", () => {
+    const sel = $("#" + b.dataset.step), n = sel.options.length;
+    sel.value = (+sel.value + +b.dataset.d + n) % n;
+    sel.dispatchEvent(new Event("change"));
+  }));
+
+  // Music
+  const sendTempo = throttle(() => cmd.tempo(state.tempo), 150);
+  $("#tempo").addEventListener("input", (e) => { state.tempo = +e.target.value; render(); sendTempo(); save(); });
+
+  // Startup
+  $$("#welcome button").forEach(b => b.addEventListener("click", () => { state.wmode = +b.dataset.w; save(); render(); cmd.welcome(state.wmode); }));
+  $$("#styles button").forEach(b => b.addEventListener("click", () => { state.style = b.dataset.style; save(); render(); }));
+  $("#anim").addEventListener("change", (e) => { state.anim = e.target.checked; save(); });
+  $("#autoon").addEventListener("change", (e) => { state.autoOn = e.target.checked; save(); });
+  $("#wait").addEventListener("input", (e) => { state.wait = +e.target.value; render(); save(); });
+  $("#playanim").addEventListener("click", animOn);
+
+  // Setup
+  $("#readfactor").addEventListener("click", () => cmd.sync(0xE3));
+  $("#syncall").addEventListener("click", syncAll);
+
+  // Presets use the saved color
   const presets = {
-    night: () => { cmd.power(193, 1); cmd.color(0, 0, 100); cmd.bright(0, 3); Object.assign(state, { h: 0, s: 100, b: 3 }); },
-    dim:   () => { cmd.power(193, 1); cmd.color(0, 0, 100); cmd.bright(0, 10); Object.assign(state, { h: 0, s: 100, b: 10 }); },
-    show:  () => { cmd.power(193, 1); cmd.color(0, 0, 100); cmd.bright(0, 100); Object.assign(state, { h: 0, s: 100, b: 100 }); },
-    off:   () => { $("#anim").checked ? animOff() : cmd.power(193, 0); }
+    night: () => { state.b = 3; state.look = "color"; cmd.power(193, 1); applyLook(); },
+    dim:   () => { state.b = 10; state.look = "color"; cmd.power(193, 1); applyLook(); },
+    show:  () => { state.b = 100; state.look = "color"; cmd.power(193, 1); applyLook(); },
+    off:   () => { state.anim ? animOff() : cmd.power(193, 0); }
   };
   $$("[data-preset]").forEach(b => b.addEventListener("click", () => { presets[b.dataset.preset](); render(); save(); }));
 })();
